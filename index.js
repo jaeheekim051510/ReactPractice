@@ -11,54 +11,6 @@ let blogBeingEdited = null;
 
 let Header = () => h('header', null, 'React')
 let Footer = () => h('footer', null, 'Copyright 2018')
-
-
-let DeleteButton = blog => {
-    let id = blog.id
-    return h('button', {
-        className: 'red-flag',
-        onClick: () => {
-            blogsArray = blogsArray.filter(post => post.id !== id);
-        update();    
-    }}, 'Remove Blog');
-    
-}
-let editBlog = blogToEdit => {
-    blogBeingEdited = Object.assign ({}, blogToEdit);
-    update();
-}
-
-let updateTitle = (blogToEdit, title) => {
-    blogToEdit.title = title
-}
-
-let updateBody = (blogToEdit, body) => {
-    blogToEdit.body = body
-}
-
-let beingEdited = () => {
-    return h('form', {}, [
-        h('input', {value: blogBeingEdited.title, onChange: (event) => {
-            updateTitle(blogBeingEdited, event.target.value)
-            update();
-        }}),
-        h('input', {value: blogBeingEdited.body, onChange: (event) => {
-            updateBody(blogBeingEdited, event.target.value)
-            update();
-        }}),
-        SaveButton()
-    ])
-}
-
-let save = () => {
-    let blog = blogsArray.find( blog => {
-        return blog.id === blogBeingEdited.id
-    })
-    Object.assign(blog, blogBeingEdited);
-    console.log(blogBeingEdited, blog)
-    update();
-}
-
 let SaveButton = () => {
     return h('button', {onClick: (event) => {
         event.preventDefault(); 
@@ -75,30 +27,121 @@ let EditButton = blog =>
         }, 
     }, 'Edit Blog');
 
+let editBlog = blogToEdit => {
+    blogBeingEdited = Object.assign ({}, blogToEdit);
+
+}
+
+let updateTitle = (blogToEdit, title) => {
+    blogToEdit.title = title
+}
+
+let updateBody = (blogToEdit, body) => {
+    blogToEdit.body = body
+}
+
+let beingEdited = () => {
+    return h('form', {}, [
+        h('input', {value: blogBeingEdited.title, onChange: (event) => {
+            updateTitle(blogBeingEdited, event.target.value)
+
+        }}),
+        h('input', {value: blogBeingEdited.body, onChange: (event) => {
+            updateBody(blogBeingEdited, event.target.value)
+
+        }}),
+        SaveButton()
+    ])
+}
+
+let save = () => {
+    let blog = blogsArray.find( blog => {
+        return blog.id === blogBeingEdited.id
+    })
+    Object.assign(blog, blogBeingEdited);
+    console.log(blogBeingEdited, blog)
+}
+
+
 let BlogRow = (props) => 
         h('div', null, [
-            h('h4', null, props.title),
-            h('p', null, props.author),
-            h(DeleteButton, props),
+            h('h4', null, props.post.title),
+            h('p', null, props.post.author),
+            h(DeleteButton, {id: props.post.id, handleBlogDelete: props.handleBlogDelete}),
             h(EditButton, props),
             blogBeingEdited && blogBeingEdited.id === props.id && h(beingEdited, null , []),
-            h('p', null, props.body)
+            h('p', null, props.post.body)
     ]);
 
 let BlogList = (props) => h('div', null, 
-    props.blogs.map(post => h(BlogRow, post))
+    props.blogs.map(post => h(BlogRow, {post: post, handleBlogDelete: props.handleBlogDelete}))
     );
+    
+let DeleteButton = blog => {
+    let id = blog.id
+    return h('button', {
+        className: 'red-flag',
+        onClick: () => {
+            blog.handleBlogDelete(id); 
+        //     blogsArray = blogsArray.filter(post => post.id !== id);
+        // return this.setState({blogs: removeBlogList});    
+    }}, 'Remove Blog');
+}
+
+// let Page = (props) => h('div', null, [
+//     h(Header, null, []),
+//     h(BlogList, props, []),
+//     h(Footer, null, [])
+// ]);
+
+class Page extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = { blogs: blogsArray } 
+    }
+    
+    // renderBlogs = () => {
+    //     return this.state.blogs.map((blog) => {
+
+    //     })
+    // }
+
+    handleBlogDelete = (id) => {
+        var newBlogsArray = this.state.blogs.filter(post => post.id !== id);
+        this.setState({ blogs: newBlogsArray })
+    }
+
+    render () {
+        return h(BlogList, {blogs:this.state.blogs, handleBlogDelete: this.handleBlogDelete});
+    }
+}
+        // let {blogs, blogBeingEdited} = this.state;
+
+        // let newBlogList = [];
+        // blogsArray.forEach( (blog) => {
+        //     if (blog === blogBeingEdited) {
+        //         let newBlog = h(beingEdited, {blog, DeleteButton});
+        //         newBlogList.push(newBlog);
+        //     } else {
+        //         let newBlog = h(BlogRow, {blog, DeleteButton});
+        //     }
+        //     });
+        //     let allBlogs = h(BlogList, {blogs: newBlogList});
+        //     return allBlogs
+        // }
+    // };
 
 
-let Page = (props) => h('div', null, [
-    h(Header, null, []),
-    h(BlogList, props, []),
-    h(Footer, null, [])
-]);
+// return (
+//     <div>
+//         <BlogList />
+//     </div>
+
+// )
+
 
 let update = () => {
     ReactDOM.render(h(Page, {blogs: blogsArray}, []), root);
 }
 
 update();
-
